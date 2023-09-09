@@ -1,13 +1,61 @@
 openapi: 3.0.1
 info:
-  title: service-name
-  description: basic template for map colonies service
+  title: products catalog service
+  description: catalog service
   version: 1.0.0
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-
+servers:
+  - url: http://localhost:8080
 paths:
+  /getProduct:
+    get:
+      operationId: getProduct
+      tags:
+        - getProduct
+      summary: gets the product from db according to query in route without query will return last product in DB, and can get few product using limit and skip as pagination
+    # example: /getProduct?id>2&minzoom=4&
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /addProduct:
+    post:
+      operationId: addProduct
+      tags:
+        - addProduct
+      summary: creates a new record of type product
+      responses:
+        201:
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resource'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
   /anotherResource:
     get:
       operationId: getAnotherResource
@@ -61,6 +109,54 @@ components:
       properties:
         message:
           type: string
+    product:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - bounding_polygon
+        - consumtionLink
+        - type
+        - consumtionProtocol
+        - resolutionBest
+        - minZoom
+        - maxZoom
+      properties:
+        id:
+          type: number
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        bounding_polygon:
+          type: string
+        consumtionLink:
+          type: string
+        type:
+          type: string
+          enum:
+            - raster
+            - rasterized vector
+            - 3d tiles
+            - QMesh
+        consumtionProtocol:
+          type: string
+          enum:
+            - WMS
+            - WMTS
+            - XYZ
+            - 3D Tiles
+        resolutionBest:
+          type: number
+          format: int64
+        minZoom:
+          type: number
+          format: int64
+        maxZoom:
+          type: number
+          format: int64
     resource:
       type: object
       required:
