@@ -9,20 +9,26 @@ info:
 servers:
   - url: http://localhost:8080
 paths:
-  /getProduct:
+  /getProducts:
     get:
-      operationId: getProduct
+      operationId: getProducts
       tags:
-        - getProduct
-      summary: gets the product from db according to query in route without query will return last product in DB, and can get few product using limit and skip as pagination
-    # example: /getProduct?id>2&minzoom=4&
+        - getProducts
+      summary: get products from db catalog, accroding to the filter in requestBody
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/requestBodyForFilter'          
       responses:
         200:
-          description: OK
+          description: A list of products
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/product'
+                type: array
+                items:
+                  $ref: '#/components/schemas/product'
         400:
           description: Bad Request
           content:
@@ -35,6 +41,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
 
   /addProduct:
     post:
@@ -42,19 +54,88 @@ paths:
       tags:
         - addProduct
       summary: creates a new record of type product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'          
       responses:
         201:
-          description: created
+          description: created, send back the product that added
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/resource'
+                $ref: '#/components/schemas/product'
         400:
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /updateProduct/{id}:
+    patch:
+      operationId: updateProduct
+      tags:
+        - updateProduct
+      summary: update the chosen feilds of a product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'      
+      responses:
+        200:
+          description: updated, send back the product that updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /deleteProduct/{id}:
+    delete:
+      operationId: deleteProduct
+      tags:
+        - deleteProduct
+      summary: delete the a product by its id   
+      responses:
+        200:
+          description: deleted, send back the product that deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
 
   /anotherResource:
     get:
@@ -69,6 +150,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/anotherResource'
+
   /resourceName:
     get:
       operationId: getResourceName
@@ -109,19 +191,37 @@ components:
       properties:
         message:
           type: string
-    product:
+    requestBodyForFilter:
       type: object
       required:
-        - id
-        - name
-        - description
-        - bounding_polygon
-        - consumtionLink
-        - type
-        - consumtionProtocol
-        - resolutionBest
-        - minZoom
-        - maxZoom
+        - arrayOfilterProduct
+      properties:
+        arrayOfilterProduct:
+          type: array
+          items:
+            $ref: '#/components/schemas/filterProduct'
+        limit:
+          type: integer
+          minimum: 0
+        skip:
+          type: integer
+          minimum: 0
+    filterProduct:
+              # expmple: {feild:'minZoom',oprator:'>',filterArg:'10'}
+      type: object
+      required:
+        - feild
+        - oprator
+        - filterArg
+      properties:
+        feild:
+          type: string
+        operator:
+          type: string
+        filterArg:
+          type: string
+    product:
+      type: object
       properties:
         id:
           type: number
