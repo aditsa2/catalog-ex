@@ -1,15 +1,25 @@
-const pgp = require('pg-promise')();
-// Database connection configuration
-const dbConfig = {
-    host: 'localhost',
-    port: 5432,
-    database: 'products-catalog',
-    user: 'user',
-    password: 'mysecretpassword'
+const { Client } = require('pg');
+const client = new Client({
+  user: 'user',
+  password: 'mysecretpassword',
+  host: 'localhost',
+  port: 5432,
+  database: 'products-catalog',
+});
+client.connect();
+
+const queryHandler = async (query: string): Promise<any> => {
+  try {
+    const results = await new Promise<any[]>((resolve, reject) => {
+      client.query(query, (error: Error, results: Object[]) => {
+        if (error) reject(error);
+        resolve(results);
+      });
+    });
+    return results;
+  } catch (error) {
+    throw error;
+  }
 };
-const db = pgp(dbConfig);
-db.query('select * from products_catalog').then((data: any) => {
-    console.log(data)
-}).catch((error: any) => {
-    console.log(error)
-})
+
+export default queryHandler;
