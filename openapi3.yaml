@@ -1,59 +1,162 @@
 openapi: 3.0.1
 info:
-  title: service-name
-  description: basic template for map colonies service
+  title: products catalog service
+  description: catalog service
   version: 1.0.0
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-
+servers:
+  - url: http://localhost:8080
 paths:
-  /anotherResource:
+  /getProducts:
     get:
-      operationId: getAnotherResource
+      operationId: getProducts
       tags:
-        - anotherResource
-      summary: gets the resource
+        - getProducts
+      summary: get products from db catalog, accroding to the filter in requestBody
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/filterAndPaginationToCatalog'          
       responses:
         200:
-          description: OK
+          description: A list of products
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/anotherResource'
-  /resourceName:
-    get:
-      operationId: getResourceName
-      tags:
-        - resourceName
-      summary: gets the resource
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/resource'
-    post:
-      operationId: createResource
-      tags:
-        - resourceName
-      summary: creates a new record of type resource
-      responses:
-        201:
-          description: created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/resource'
+                type: array
+                items:
+                  $ref: '#/components/schemas/product'
         400:
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/error'
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /addProduct:
+    post:
+      operationId: addProduct
+      tags:
+        - addProduct
+      summary: creates a new record of type product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'          
+      responses:
+        201:
+          description: created, send back the product that added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /updateProduct/{id}:
+    patch:
+      operationId: updateProduct
+      tags:
+        - updateProduct
+      summary: update the chosen feilds of a product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: '#/components/schemas/id'      
+          description: The product ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'      
+      responses:
+        200:
+          description: updated, send back the product that updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+  /deleteProduct/{id}:
+    delete:
+      operationId: deleteProduct
+      tags:
+        - deleteProduct
+      summary: delete the a product by its id   
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: '#/components/schemas/id'      
+          description: The product ID
+      responses:
+        200:
+          description: deleted, send back the product that deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        500:
+          description: SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+
+
 components:
   schemas:
+    id:
+      type: string
+      format: uuid
     error:
       type: object
       required:
@@ -61,27 +164,93 @@ components:
       properties:
         message:
           type: string
-    resource:
+    filterAndPaginationToCatalog:
       type: object
       required:
-        - id
-        - name
-        - description
+        - arrayOfilterProduct
+      properties:
+        arrayOfilterProduct:
+          type: array
+          items:
+            $ref: '#/components/schemas/productFilter'
+        limit:
+          type: integer
+          minimum: 0
+        skip:
+          type: integer
+          minimum: 0
+    productFilter:
+              # expmple: {feild:'minZoom',operator:'>',value:'10'}
+      type: object
+      required:
+        - feild
+        - operator
+        - value
+      properties:
+        feild:
+          type: string
+          enum:
+            - id
+            - name
+            - description
+            - bounding_polygon
+            - consumtion_link
+            - type
+            - consumption_protocol
+            - resolution_best
+            - min_zoom
+            - max_zoom
+        operator:
+          type: string
+          enum:
+            - '<'
+            - '>'
+            - '<='
+            - '>='
+            - '='
+            - '!='
+            - 'st_contains'
+            - 'st_within'
+            - 'st_intersects'
+        value:
+          oneOf:
+            - type: string
+            - type: integer
+    product:
+      type: object
       properties:
         id:
-          type: number
-          format: int64
+          type: string
+          format: uuid
         name:
           type: string
         description:
           type: string
-    anotherResource:
-      type: object
-      required:
-        - kind
-        - isAlive
-      properties:
-        kind:
+        boundingPolygon:
           type: string
-        isAlive:
-          type: boolean
+        consumptionLink:
+          type: string
+        type:
+          type: string
+          enum:
+            - raster
+            - rasterized vector
+            - 3d tiles
+            - QMesh
+        consumtionProtocol:
+          type: string
+          enum:
+            - WMS
+            - WMTS
+            - XYZ
+            - 3D Tiles
+        resolutionBest:
+          type: number
+          format: int64
+        minZoom:
+          type: number
+          format: int64
+        maxZoom:
+          type: number
+          format: int64
+
