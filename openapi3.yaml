@@ -19,7 +19,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/requestBodyForFilter'          
+              $ref: '#/components/schemas/filterAndPaginationToCatalog'          
       responses:
         200:
           description: A list of products
@@ -85,6 +85,13 @@ paths:
       tags:
         - updateProduct
       summary: update the chosen feilds of a product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: '#/components/schemas/id'      
+          description: The product ID
       requestBody:
         content:
           application/json:
@@ -116,6 +123,13 @@ paths:
       tags:
         - deleteProduct
       summary: delete the a product by its id   
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: '#/components/schemas/id'      
+          description: The product ID
       responses:
         200:
           description: deleted, send back the product that deleted
@@ -140,6 +154,9 @@ paths:
 
 components:
   schemas:
+    id:
+      type: string
+      format: uuid
     error:
       type: object
       required:
@@ -147,7 +164,7 @@ components:
       properties:
         message:
           type: string
-    requestBodyForFilter:
+    filterAndPaginationToCatalog:
       type: object
       required:
         - arrayOfilterProduct
@@ -155,40 +172,63 @@ components:
         arrayOfilterProduct:
           type: array
           items:
-            $ref: '#/components/schemas/filterProduct'
+            $ref: '#/components/schemas/productFilter'
         limit:
           type: integer
           minimum: 0
         skip:
           type: integer
           minimum: 0
-    filterProduct:
-              # expmple: {feild:'minZoom',oprator:'>',filterArg:'10'}
+    productFilter:
+              # expmple: {feild:'minZoom',operator:'>',value:'10'}
       type: object
       required:
         - feild
-        - oprator
-        - filterArg
+        - operator
+        - value
       properties:
         feild:
           type: string
+          enum:
+            - id
+            - name
+            - description
+            - bounding_polygon
+            - consumtion_link
+            - type
+            - consumption_protocol
+            - resolution_best
+            - min_zoom
+            - max_zoom
         operator:
           type: string
-        filterArg:
-          type: string
+          enum:
+            - '<'
+            - '>'
+            - '<='
+            - '>='
+            - '='
+            - '!='
+            - 'st_contains'
+            - 'st_within'
+            - 'st_intersects'
+        value:
+          oneOf:
+            - type: string
+            - type: integer
     product:
       type: object
       properties:
         id:
-          type: number
-          format: int64
+          type: string
+          format: uuid
         name:
           type: string
         description:
           type: string
-        bounding_polygon:
+        boundingPolygon:
           type: string
-        consumtionLink:
+        consumptionLink:
           type: string
         type:
           type: string
